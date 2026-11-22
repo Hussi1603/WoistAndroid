@@ -1,0 +1,31 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    function signedIn() { return request.auth != null; }
+    function isMe(uid) { return signedIn() && request.auth.uid == uid; }
+
+    // Privates Profil: nur ich selbst.
+    match /users/{uid} {
+      allow read, write: if isMe(uid);
+    }
+
+    // Einladungs-Codes: einzeln abrufbar (wer den Code kennt), aber nicht auflistbar.
+    match /codes/{code} {
+      allow get: if signedIn();
+      allow create: if signedIn()
+        && request.resource.data.uid == request.auth.uid
+        && code.size() == 6;
+      allow update: if signedIn()
+        && resource.data.uid == request.auth.uid
+        && request.resource.data.uid == request.auth.uid;
+      allow delete: if signedIn() && resource.data.uid == request.auth.uid;
+    }
+
+    // Standorte: schreiben nur ich, lesen ich + alle in "viewers".
+    match /locations/{uid} {
+      allow read: if isMe(uid)
+        || (signedIn() && request.auth.uid in resource.data.viewers);
+      allow write: if isMe(uid);
+    }
+  }
+}
