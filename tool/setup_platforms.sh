@@ -10,6 +10,10 @@ APP_NAME="Wo ist?"
 if [ ! -d android ] || [ ! -d ios ]; then
   flutter create --org de.woist --project-name woist --platforms android,ios .
 fi
+# Von "flutter create" erzeugten Beispiel-Test entfernen (passt nicht zur App).
+if [ -f test/widget_test.dart ] && grep -q MyApp test/widget_test.dart; then
+  rm test/widget_test.dart
+fi
 
 # ---------------- Android ----------------
 MANIFEST=android/app/src/main/AndroidManifest.xml
